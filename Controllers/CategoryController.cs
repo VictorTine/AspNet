@@ -14,6 +14,7 @@ namespace BlogX.Controllers
         [HttpGet("v1/categories")]  //localhost:PORTA/v1/categories
         public async Task<IActionResult> GetAsync([FromServices] BlogXDataContext context)
         {
+            
             try
             {
                 var categories = await context.Categories.ToListAsync();
@@ -21,7 +22,7 @@ namespace BlogX.Controllers
             }
             catch
             {
-                return StatusCode(500, new ResultViewModel<List<Category>> ("05x04 - Falha interna no servidor"));
+                return StatusCode(500, new ResultViewModel<List<Category>>("05x04 - Falha interna no servidor"));
             }
             
         }
