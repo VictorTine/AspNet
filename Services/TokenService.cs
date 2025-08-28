@@ -1,6 +1,7 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
+using BlogX.Extensions;
 using BlogX.Models;
 using Microsoft.IdentityModel.Tokens;
 
@@ -12,13 +13,10 @@ namespace BlogX.Services
         {
             var tokenHandler = new JwtSecurityTokenHandler();
             var key = Encoding.ASCII.GetBytes(Configuration.JwtKey);
+            var claims = user.GetClaims();
             var tokenDescriptor = new SecurityTokenDescriptor
             {
-                Subject = new ClaimsIdentity( new Claim[]
-                {
-                    new (ClaimTypes.Name,"victortine"), //User.Identity.Name
-                    new (ClaimTypes.Role, "admin") //User.IsInRole
-                }),
+                Subject = new ClaimsIdentity(claims),
                 Expires = DateTime.UtcNow.AddHours(8),
                 SigningCredentials = new SigningCredentials(
                     new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature
