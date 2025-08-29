@@ -1,7 +1,8 @@
 using BlogX.Data;
 using BlogX.Extensions;
 using BlogX.Services;
-using BlogX.ViewModels;
+using BlogX.ViewModels.Accounts;
+using BlogX.ViewModels.Categories;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Authorization.Infrastructure;
 using Microsoft.AspNetCore.Mvc;
@@ -9,6 +10,7 @@ using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using BlogX.Models;
 using SecureIdentity.Password;
 using Microsoft.EntityFrameworkCore;
+using System.Text.RegularExpressions;
 
 namespace BlogX.Controllers
 {
@@ -19,6 +21,7 @@ namespace BlogX.Controllers
         [HttpPost("v1/accounts")]
         public async Task<IActionResult> Post(
             [FromBody] RegisterViewModel model,
+            [FromServices] EmailService emailService,
             [FromServices] BlogXDataContext context)
         {
             if (!ModelState.IsValid)
@@ -40,6 +43,8 @@ namespace BlogX.Controllers
             {
                 await context.Users.AddAsync(user);
                 await context.SaveChangesAsync();
+
+                emailService.Send(user.Name, user.Email, subject: "Bem vindo ao BlogX!", body: $"Sua senha é {password}");
 
                 return Ok(new ResultViewModel<dynamic>(new
                 {
@@ -97,6 +102,47 @@ namespace BlogX.Controllers
 
         }
 
+
+        [Authorize]
+        [HttpPost("v1/accounts/upload-image")]
+        public async Task<IActionResult> UploadImage(
+            [FromBody] UploadImageViewModel model,
+            [FromServices] BlogXDataContext context)
+        {
+            var fileName = $"{Guid.NewGuid().ToString()}.jpg";
+            var data = new Regex(pattern: @"^data:image\/[a-z]+;base64,").Replace(input: model.Base64Image, "");
+            var bytes = Convert.FromBase64String(data);
+
+            try
+            {
+                await System.IO.File.WriteAllBytesAsync(path: $"wwwroot/images/{fileName}", bytes);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, value: new ResultViewModel<string>(error: "05x04 - Falha interna no servidor"));
+            }
+            var user = await context.Users.FirstOrDefaultAsync(x => x.Email == User.Identity.Name);
+
+            if (user == null)
+            {
+                return NotFound(new ResultViewModel<User>("Usuário não encontrado"));
+            }
+
+            user.Image = $"https://localhost:0000/images/{fileName}"; //Valor da porta precisa ser alterado em prod
+
+            try
+            {
+                context.Users.Update(user);
+                await context.SaveChangesAsync();
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new ResultViewModel<string>("05X04 - Falha interna no servidor"));
+            }
+
+            return Ok(new ResultViewModel<string>(data: "Imagem alterada com sucesso.", errors: null));
+            }
+        
 
         
     }

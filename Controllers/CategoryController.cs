@@ -2,7 +2,8 @@ using System.Linq.Expressions;
 using BlogX.Data;
 using BlogX.Extensions;
 using BlogX.Models;
-using BlogX.ViewModels;
+using BlogX.ViewModels.Accounts;
+using BlogX.ViewModels.Categories;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 

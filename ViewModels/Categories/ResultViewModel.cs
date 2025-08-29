@@ -1,4 +1,4 @@
-namespace BlogX.ViewModels
+namespace BlogX.ViewModels.Categories
 {
     public class ResultViewModel<T>
     {
